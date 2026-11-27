@@ -12,7 +12,8 @@ import { saveToken, removeToken } from "../utils/token";
 // Register a new user
 export async function registerUser(formData) {
   const requestBody = {
-    [REGISTER_FIELDS.name]: formData.name,
+    [REGISTER_FIELDS.firstName]: formData.firstName,
+    [REGISTER_FIELDS.lastName]: formData.lastName,
     [REGISTER_FIELDS.email]: formData.email,
     [REGISTER_FIELDS.password]: formData.password
   };

@@ -7,7 +7,8 @@ function RegisterPage() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -29,6 +30,11 @@ function RegisterPage() {
     event.preventDefault();
     setError("");
 
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      setError("First name and last name are required.");
+      return;
+    }
+
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -43,7 +49,8 @@ function RegisterPage() {
       setLoading(true);
 
       await registerUser({
-        name: form.name.trim(),
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
         email: form.email.trim(),
         password: form.password
       });
@@ -52,9 +59,10 @@ function RegisterPage() {
         replace: true,
         state: {
           message:
-            "Registration successful. Please log in, or verify your email if required."
+            "Registration successful! Please log in, or verify your email if required."
         }
       });
+
     } catch (err) {
       const backendMessage = err.response?.data?.message;
 
@@ -80,12 +88,24 @@ function RegisterPage() {
           </p>
         )}
 
-        <label htmlFor="name">Full Name</label>
+        <label htmlFor="firstName">First Name</label>
         <input
-          id="name"
-          name="name"
+          id="firstName"
+          name="firstName"
           type="text"
-          value={form.name}
+          placeholder="Enter first name"
+          value={form.firstName}
+          onChange={handleChange}
+          required
+        />
+
+        <label htmlFor="lastName">Last Name</label>
+        <input
+          id="lastName"
+          name="lastName"
+          type="text"
+          placeholder="Enter last name"
+          value={form.lastName}
           onChange={handleChange}
           required
         />
@@ -95,6 +115,7 @@ function RegisterPage() {
           id="email"
           name="email"
           type="email"
+          placeholder="Enter email"
           value={form.email}
           onChange={handleChange}
           required
@@ -105,6 +126,7 @@ function RegisterPage() {
           id="password"
           name="password"
           type="password"
+          placeholder="Enter password"
           value={form.password}
           onChange={handleChange}
           required
@@ -117,6 +139,7 @@ function RegisterPage() {
           id="confirmPassword"
           name="confirmPassword"
           type="password"
+          placeholder="Confirm password"
           value={form.confirmPassword}
           onChange={handleChange}
           required
