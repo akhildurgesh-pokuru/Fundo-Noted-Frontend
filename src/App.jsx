@@ -1,10 +1,49 @@
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes
+} from "react-router";
+
+import RegisterPage from "./pages/RegisterPage";
+import LoginPage from "./pages/LoginPage";
+import DashboardPage from "./pages/DashboardPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+import "./App.css";
+
 function App() {
   return (
-    <main style={{ padding: "32px", fontFamily: "Arial" }}>
-      <h1>Fundoo Notes</h1>
-      <p>Frontend setup completed.</p>
-      <p>Registration is our first use case.</p>
-    </main>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={<Navigate to="/login" replace />}
+        />
+
+        <Route
+          path="/register"
+          element={<RegisterPage />}
+        />
+
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
+
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path="/dashboard"
+            element={<DashboardPage />}
+          />
+        </Route>
+
+        <Route
+          path="*"
+          element={<Navigate to="/login" replace />}
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
