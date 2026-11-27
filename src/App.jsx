@@ -13,6 +13,8 @@ import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ResendVerificationPage from "./pages/ResendVerificationPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ArchivePage from "./pages/ArchivePage";
+import TrashPage from "./pages/TrashPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -66,6 +68,15 @@ function App() {
           path="*"
           element={<Navigate to="/login" replace />}
         />
+
+        <Route path="/archive" 
+        element={<ArchivePage />} 
+        />
+
+        <Route path="/trash" 
+        element={<TrashPage />} 
+        />
+        
       </Routes>
     </BrowserRouter>
   );

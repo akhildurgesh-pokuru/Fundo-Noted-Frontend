@@ -24,6 +24,11 @@ export const NOTE_PATHS = {
     return {
       id: note.id,
       title: note.title ?? "",
-      content: note.description ?? ""
+      content: note.description ?? "",
+      pinned: note.pinned ?? false,
+      archived: note.archived ?? false,
+      trashed: note.trashed ?? false,
+      createdAt: note.createdAt ?? null,
+      updatedAt: note.updatedAt ?? null
     };
   }

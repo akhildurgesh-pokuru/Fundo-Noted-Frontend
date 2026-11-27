@@ -369,3 +369,48 @@ body {
 .note-modal .note-form-actions {
   margin-top: 20px;
 }
+
+/* UC4 — Notes organization */
+
+.note-pinned-label {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.note-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.note-card-actions button {
+  font-size: 13px;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-actions a {
+  text-decoration: none;
+}
+
+@media (max-width: 600px) {
+  .dashboard-header {
+    align-items: flex-start;
+  }
+
+  .dashboard-actions {
+    gap: 8px;
+  }
+}
