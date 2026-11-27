@@ -15,6 +15,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ArchivePage from "./pages/ArchivePage";
 import TrashPage from "./pages/TrashPage";
+import LabelsPage from "./pages/LabelsPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -75,6 +76,10 @@ function App() {
 
         <Route path="/trash" 
         element={<TrashPage />} 
+        />
+        
+        <Route path="/labels" 
+        element={<LabelsPage />} 
         />
         
       </Routes>
