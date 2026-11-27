@@ -414,3 +414,141 @@ body {
     gap: 8px;
   }
 }
+
+.notes-search-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.notes-search-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: white;
+  color: #202124;
+}
+
+.notes-search-form button {
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .notes-search-form {
+    flex-wrap: wrap;
+  }
+
+  .notes-search-form input {
+    flex-basis: 100%;
+  }
+}
+
+/* UC5 — Labels Management */
+
+.label-create-form,
+.label-assign-form,
+.label-rename-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.label-create-form input,
+.label-assign-form select,
+.label-rename-form input {
+  flex: 1;
+  min-width: 160px;
+  padding: 12px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: white;
+  color: #202124;
+}
+
+.label-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.labels-panel {
+  min-width: 0;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.labels-panel h3 {
+  margin-top: 0;
+  color: #202124;
+}
+
+.labels-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.label-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.label-name-button {
+  flex: 1;
+  text-align: left;
+  background: transparent;
+  color: #202124;
+  border: none;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.label-name-button.selected {
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.label-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.label-notes-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.label-notes-grid .note-card {
+  overflow-wrap: anywhere;
+}
+
+.label-notes-grid .note-content {
+  white-space: pre-wrap;
+}
+
+@media (max-width: 700px) {
+  .label-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .labels-panel {
+    padding: 14px;
+  }
+}

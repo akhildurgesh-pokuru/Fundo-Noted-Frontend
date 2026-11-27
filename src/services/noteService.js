@@ -47,3 +47,18 @@ export async function deleteNote(id) {
 
   return response.data;
 }
+
+// Search notes by title or description
+export async function searchNotes(keyword) {
+  const response = await apiClient.get("/notes/search", {
+    params: {
+      keyword: keyword
+    }
+  });
+
+  if (!Array.isArray(response.data)) {
+    throw new Error("Unexpected search response from backend.");
+  }
+
+  return response.data.map(fromNoteResponse);
+}
