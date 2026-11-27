@@ -145,6 +145,7 @@ function ProfilePage() {
 
           <input
             id="profileFirstName"
+            maxLength={100}
             value={form.firstName}
             onChange={event =>
               setForm(previous => ({
@@ -161,6 +162,7 @@ function ProfilePage() {
 
           <input
             id="profileLastName"
+            maxLength={100}
             value={form.lastName}
             onChange={event =>
               setForm(previous => ({
