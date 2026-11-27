@@ -128,3 +128,12 @@ body {
     padding: 14px;
   }
 }
+
+.auth-card h2 {
+  color: #202124;
+}
+
+.dashboard-header h1,
+.dashboard-content h2 {
+  color: #202124;
+}

@@ -9,11 +9,15 @@ const apiClient = axios.create({
   }
 });
 
-// Add the token automatically to protected requests.
 apiClient.interceptors.request.use((config) => {
   const token = getToken();
 
-  if (token) {
+  // Registration and login are public APIs.
+  const isPublicApi =
+    config.url === "/users/register" ||
+    config.url === "/users/login";
+
+  if (token && !isPublicApi) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
