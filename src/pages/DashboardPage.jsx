@@ -12,6 +12,13 @@ import {
   deleteNote
 } from "../services/noteService";
 
+import {
+  pinNote,
+  unpinNote,
+  archiveNote,
+  trashNote
+} from "../services/noteOrganizationService";
+
 import { logoutUser } from "../services/authService";
 import { getApiError } from "../utils/getApiError";
 import { removeToken } from "../utils/token";
@@ -57,6 +64,57 @@ function DashboardPage() {
   useEffect(() => {
     loadNotes();
   }, [loadNotes]);
+
+  async function handlePin(note) {
+    try {
+      setError("");
+      setMessage("");
+  
+      if (note.pinned) {
+        await unpinNote(note.id);
+      } else {
+        await pinNote(note.id);
+      }
+  
+      await loadNotes();
+    } catch (err) {
+      handleApiError(err, "Unable to change pin status.");
+    }
+  }
+  
+  async function handleArchive(note) {
+    try {
+      setError("");
+      setMessage("");
+  
+      await archiveNote(note.id);
+      await loadNotes();
+  
+      setMessage("Note archived successfully.");
+    } catch (err) {
+      handleApiError(err, "Unable to archive note.");
+    }
+  }
+  
+  async function handleTrash(note) {
+    const confirmed = window.confirm(
+      `Move "${note.title || "Untitled Note"}" to Trash?`
+    );
+  
+    if (!confirmed) return;
+  
+    try {
+      setError("");
+      setMessage("");
+  
+      await trashNote(note.id);
+      await loadNotes();
+  
+      setMessage("Note moved to Trash.");
+    } catch (err) {
+      handleApiError(err, "Unable to move note to Trash.");
+    }
+  }
 
   async function handleCreate(form) {
     try {
@@ -116,6 +174,10 @@ function DashboardPage() {
     navigate("/login", { replace: true });
   }
 
+  const visibleNotes = notes
+  .filter(note => !note.archived && !note.trashed)
+  .sort((a, b) => Number(b.pinned) - Number(a.pinned));
+
   return (
     <main className="dashboard-page">
       <header className="dashboard-header">
@@ -124,6 +186,14 @@ function DashboardPage() {
         <div className="dashboard-actions">
           <Link to="/profile" className="profile-link">
             My Profile
+          </Link>
+
+          <Link to="/archive" className="profile-link">
+            Archive
+          </Link>
+
+          <Link to="/trash" className="profile-link">
+            Trash
           </Link>
 
           <button onClick={handleLogout}>
@@ -155,23 +225,25 @@ function DashboardPage() {
           <button onClick={loadNotes}>
             Retry Loading Notes
           </button>
-        ) : notes.length === 0 ? (
+        ) : visibleNotes.length === 0 ? (
           <div className="empty-notes">
             <h3>No notes yet</h3>
             <p>Create your first note above.</p>
           </div>
         ) : (
           <div className="notes-grid">
-            {notes.map(note => (
-              <NoteCard
-              key={note.id}
-              note={note}
-              onView={setViewingNote}
-              onEdit={setEditingNote}
-              onDelete={handleDelete}
-            />
-            ))}
-          </div>
+        {visibleNotes.map(note => (
+          <NoteCard
+            key={note.id}
+            note={note}
+            onView={setViewingNote}
+            onEdit={setEditingNote}
+            onPin={handlePin}
+            onArchive={handleArchive}
+            onTrash={handleTrash}
+          />
+        ))}
+      </div>
         )}
       </section>
 

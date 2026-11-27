@@ -1,35 +1,53 @@
-function NoteCard({ note, onView, onEdit, onDelete }) {
+
+function NoteCard({
+    note,
+    onView,
+    onEdit,
+    onPin,
+    onArchive,
+    onTrash
+  }) {
     return (
       <article className="note-card">
+  
+        {note.pinned && (
+          <span className="note-pinned-label">
+            Pinned
+          </span>
+        )}
+  
         {note.title && <h3>{note.title}</h3>}
   
-        <p className="note-content">
-          {note.content?.length > 100
-            ? note.content.substring(0, 100) + "..."
-            : note.content}
-        </p>
+        {note.content && (
+          <p className="note-content">
+            {note.content.length > 100
+              ? note.content.substring(0, 100) + "..."
+              : note.content}
+          </p>
+        )}
   
         <div className="note-card-actions">
-          <button
-            type="button"
-            onClick={() => onView(note)}
-          >
-            View Note
+          <button onClick={() => onView(note)}>
+            View
           </button>
   
-          <button
-            type="button"
-            onClick={() => onEdit(note)}
-          >
+          <button onClick={() => onEdit(note)}>
             Edit
           </button>
   
+          <button onClick={() => onPin(note)}>
+            {note.pinned ? "Unpin" : "Pin"}
+          </button>
+  
+          <button onClick={() => onArchive(note)}>
+            Archive
+          </button>
+  
           <button
-            type="button"
             className="delete-button"
-            onClick={() => onDelete(note)}
+            onClick={() => onTrash(note)}
           >
-            Delete
+            Trash
           </button>
         </div>
       </article>
@@ -37,3 +55,4 @@ function NoteCard({ note, onView, onEdit, onDelete }) {
   }
   
   export default NoteCard;
+  
