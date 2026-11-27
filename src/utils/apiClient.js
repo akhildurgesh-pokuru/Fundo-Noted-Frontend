@@ -9,18 +9,30 @@ const apiClient = axios.create({
   }
 });
 
+// APIs that do not require a JWT
+const publicPaths = [
+  "/users/register",
+  "/users/login",
+  "/users/verify-email",
+  "/users/resend-verification",
+  "/users/forgot-password",
+  "/users/reset-password"
+];
+
 apiClient.interceptors.request.use((config) => {
-  const token = getToken();
+  const path = config.url?.split("?")[0];
 
-  // Registration and login are public APIs.
-  const isPublicApi =
-    config.url === "/users/register" ||
-    config.url === "/users/login";
+  const isPublicApi = publicPaths.includes(path);
 
-  if (token && !isPublicApi) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (!isPublicApi) {
+    const token = getToken();
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
 
+  // IMPORTANT: Always return config
   return config;
 });
 
