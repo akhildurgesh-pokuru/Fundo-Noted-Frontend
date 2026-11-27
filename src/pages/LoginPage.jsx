@@ -81,6 +81,15 @@ function LoginPage() {
           Don't have an account?{" "}
           <Link to="/register">Register</Link>
         </p>
+        <p>
+        <Link to="/forgot-password">Forgot Password?</Link>
+        </p>
+
+        <p>
+          <Link to="/resend-verification">
+            Resend Verification Email
+          </Link>
+        </p>
       </form>
     </main>
   );

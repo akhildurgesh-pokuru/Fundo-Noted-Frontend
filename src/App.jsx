@@ -8,6 +8,12 @@ import {
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
+import ProfilePage from "./pages/ProfilePage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
+import ResendVerificationPage from "./pages/ResendVerificationPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
@@ -21,20 +27,38 @@ function App() {
           element={<Navigate to="/login" replace />}
         />
 
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+
         <Route
-          path="/register"
-          element={<RegisterPage />}
+          path="/verify-email"
+          element={<VerifyEmailPage />}
         />
 
         <Route
-          path="/login"
-          element={<LoginPage />}
+          path="/resend-verification"
+          element={<ResendVerificationPage />}
+        />
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPasswordPage />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPasswordPage />}
         />
 
         <Route element={<ProtectedRoute />}>
           <Route
             path="/dashboard"
             element={<DashboardPage />}
+          />
+
+          <Route
+            path="/profile"
+            element={<ProfilePage />}
           />
         </Route>
 

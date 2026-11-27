@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { logoutUser } from "../services/authService";
 
 function DashboardPage() {
@@ -14,9 +14,15 @@ function DashboardPage() {
       <header className="dashboard-header">
         <h1>Fundoo Notes</h1>
 
-        <button onClick={handleLogout}>
-          Logout
-        </button>
+        <div className="dashboard-actions">
+          <Link to="/profile" className="profile-link">
+            My Profile
+          </Link>
+
+          <button onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
       </header>
 
       <section className="dashboard-content">
@@ -25,8 +31,7 @@ function DashboardPage() {
         <p>You have completed the frontend login flow.</p>
 
         <p>
-          Notes will be displayed here after
-          UC3 backend integration.
+          Notes will be displayed here after UC3 backend integration.
         </p>
       </section>
     </main>
