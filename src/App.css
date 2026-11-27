@@ -137,3 +137,77 @@ body {
 .dashboard-content h2 {
   color: #202124;
 }
+
+.dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.profile-page {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 24px;
+}
+
+.profile-card {
+  background: white;
+  border: 1px solid #e6e8ee;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 20px;
+}
+
+.profile-card p {
+  margin: 14px 0;
+}
+
+.profile-page h1 {
+  color: #202124;
+}
+
+.dashboard-actions button {
+  width: auto;
+}
+
+@media (max-width: 480px) {
+  .dashboard-actions {
+    gap: 8px;
+  }
+}
+
+.profile-card label {
+  display: block;
+  font-weight: 600;
+  margin: 14px 0 6px;
+}
+
+.profile-card input {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 15px;
+}
+
+.profile-card button {
+  margin-top: 18px;
+  padding: 12px 20px;
+  background: #2563eb;
+  border: none;
+  color: white;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.profile-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
