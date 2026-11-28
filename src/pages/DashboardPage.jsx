@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router";
 
 import NoteForm from "../components/NoteForm";
 import NoteCard from "../components/NoteCard";
+import ReminderForm from "../components/ReminderForm";
 
 import {
   getNotes,
@@ -30,6 +31,7 @@ function DashboardPage() {
   const [notes, setNotes] = useState([]);
   const [editingNote, setEditingNote] = useState(null);
   const [viewingNote, setViewingNote] = useState(null);
+  const [reminderNote, setReminderNote] = useState(null);
 
   // UC5: Search state
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -261,6 +263,10 @@ function DashboardPage() {
             Trash
           </Link>
 
+          <Link to="/reminders" className="profile-link">
+            Reminders
+          </Link>
+
           <button type="button" onClick={handleLogout}>
             Logout
           </button>
@@ -354,14 +360,15 @@ function DashboardPage() {
           <div className="notes-grid">
             {visibleNotes.map(note => (
               <NoteCard
-                key={note.id}
-                note={note}
-                onView={setViewingNote}
-                onEdit={setEditingNote}
-                onPin={handlePin}
-                onArchive={handleArchive}
-                onTrash={handleTrash}
-              />
+              key={note.id}
+              note={note}
+              onView={setViewingNote}
+              onEdit={setEditingNote}
+              onPin={handlePin}
+              onArchive={handleArchive}
+              onTrash={handleTrash}
+              onReminder={setReminderNote}
+            />
             ))}
           </div>
         )}
@@ -422,6 +429,26 @@ function DashboardPage() {
               initialNote={editingNote}
               onSave={handleUpdate}
               onCancel={() => setEditingNote(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {reminderNote && (
+        <div className="note-modal-backdrop">
+          <div
+            className="note-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Set note reminder"
+          >
+            <ReminderForm
+              note={reminderNote}
+              onSuccess={() => {
+                setReminderNote(null);
+                setMessage("Reminder saved successfully!");
+              }}
+              onCancel={() => setReminderNote(null)}
             />
           </div>
         </div>
