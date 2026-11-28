@@ -267,6 +267,10 @@ function DashboardPage() {
             Reminders
           </Link>
 
+          <Link to="/csv" className="profile-link">
+            Import / Export
+          </Link>
+
           <button type="button" onClick={handleLogout}>
             Logout
           </button>

@@ -17,6 +17,7 @@ import ArchivePage from "./pages/ArchivePage";
 import TrashPage from "./pages/TrashPage";
 import LabelsPage from "./pages/LabelsPage";
 import RemindersPage from "./pages/RemindersPage";
+import CsvPage from "./pages/CsvPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -86,6 +87,10 @@ function App() {
         <Route path="/reminders" 
         element={<RemindersPage />} 
         />
+
+       <Route path="/csv" 
+       element={<CsvPage />} 
+       />
         
       </Routes>
     </BrowserRouter>

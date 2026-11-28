@@ -3,10 +3,6 @@ import { getToken } from "./token";
 
 const apiClient = axios.create({
   baseURL: "/api",
-  timeout: 15000,
-  headers: {
-    "Content-Type": "application/json"
-  }
 });
 
 // APIs that do not require a JWT
