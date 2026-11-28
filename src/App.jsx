@@ -88,9 +88,14 @@ function App() {
         element={<RemindersPage />} 
         />
 
-       <Route path="/csv" 
-       element={<CsvPage />} 
-       />
+        <Route
+          path="/csv"
+          element={
+            <ProtectedRoute>
+              <CsvPage />
+            </ProtectedRoute>
+          }
+        />
         
       </Routes>
     </BrowserRouter>
