@@ -9,6 +9,11 @@ import {
 
 import ReminderForm from "../components/ReminderForm";
 
+import LoadingState from "../components/ui/LoadingState";
+import EmptyState from "../components/ui/EmptyState";
+import StatusMessage from "../components/ui/StatusMessage";
+import Modal from "../components/ui/Modal";
+
 import { getApiError } from "../utils/getApiError";
 import { removeToken } from "../utils/token";
 
@@ -36,7 +41,7 @@ function RemindersPage() {
     [navigate]
   );
 
-  // Fetch real reminders from Spring Boot.
+  // Load real upcoming reminders.
   const loadReminders = useCallback(async () => {
     try {
       setLoading(true);
@@ -44,7 +49,6 @@ function RemindersPage() {
 
       const data = await getUpcomingReminders();
 
-      // Show the nearest reminder first.
       const sorted = [...data].sort(
         (a, b) =>
           new Date(a.reminderAt).getTime() -
@@ -65,7 +69,7 @@ function RemindersPage() {
     loadReminders();
   }, [loadReminders]);
 
-  // Display the actual reminder date in local time.
+  // Convert UTC reminder time to browser local time.
   function formatReminderDate(reminderAt) {
     const date = new Date(reminderAt);
 
@@ -82,7 +86,7 @@ function RemindersPage() {
     });
   }
 
-  // Remove a reminder without deleting the note.
+  // Delete the reminder without deleting its note.
   async function handleRemoveReminder(reminder) {
     const confirmed = window.confirm(
       `Remove reminder for "${
@@ -111,7 +115,7 @@ function RemindersPage() {
     }
   }
 
-  // The existing ReminderForm can also update reminders.
+  // Open Update Reminder modal.
   function handleEditReminder(reminder) {
     setEditingReminder(reminder);
     setError("");
@@ -131,39 +135,29 @@ function RemindersPage() {
   return (
     <main className="dashboard-page">
 
-      {/* Header and navigation */}
       <header className="dashboard-header">
         <h1>Fundoo Notes</h1>
 
-        <div className="dashboard-actions">
-          <Link
-            to="/dashboard"
-            className="profile-link"
-          >
+        <nav
+          className="dashboard-actions"
+          aria-label="Page navigation"
+        >
+          <Link to="/dashboard" className="profile-link">
             My Notes
           </Link>
 
-          <Link
-            to="/labels"
-            className="profile-link"
-          >
+          <Link to="/labels" className="profile-link">
             Manage Labels
           </Link>
 
-          <Link
-            to="/archive"
-            className="profile-link"
-          >
+          <Link to="/archive" className="profile-link">
             Archive
           </Link>
 
-          <Link
-            to="/trash"
-            className="profile-link"
-          >
+          <Link to="/trash" className="profile-link">
             Trash
           </Link>
-        </div>
+        </nav>
       </header>
 
       <section className="dashboard-content">
@@ -173,20 +167,25 @@ function RemindersPage() {
           View, update, or remove reminders for your notes.
         </p>
 
+        {/* UC9 - Error */}
         {error && (
-          <p className="error-message" role="alert">
+          <StatusMessage type="error">
             {error}
-          </p>
+          </StatusMessage>
         )}
 
+        {/* UC9 - Success */}
         {message && (
-          <p className="success-message" role="status">
+          <StatusMessage type="success">
             {message}
-          </p>
+          </StatusMessage>
         )}
 
+        {/* UC9 - Loading / Empty / Reminders */}
         {loading ? (
-          <p>Loading reminders...</p>
+          <LoadingState
+            message="Loading upcoming reminders..."
+          />
         ) : error ? (
           <button
             type="button"
@@ -195,12 +194,10 @@ function RemindersPage() {
             Retry
           </button>
         ) : reminders.length === 0 ? (
-          <div className="empty-notes">
-            <h3>No upcoming reminders</h3>
-            <p>
-              Open My Notes and set a reminder for a note.
-            </p>
-          </div>
+          <EmptyState
+            title="No upcoming reminders"
+            description="Open My Notes and set a reminder for a future date."
+          />
         ) : (
           <div className="reminders-grid">
             {reminders.map(reminder => (
@@ -218,9 +215,7 @@ function RemindersPage() {
 
                 <p className="reminder-date">
                   Reminder:{" "}
-                  {formatReminderDate(
-                    reminder.reminderAt
-                  )}
+                  {formatReminderDate(reminder.reminderAt)}
                 </p>
 
                 <div className="reminder-card-actions">
@@ -253,30 +248,25 @@ function RemindersPage() {
         )}
       </section>
 
-      {/* Update reminder modal */}
+      {/* UC9 - Accessible Update Reminder modal */}
       {editingReminder && (
-        <div className="note-modal-backdrop">
-          <div
-            className="note-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Update reminder"
-          >
-            <ReminderForm
-              note={{
-                id: editingReminder.noteId,
-                title: editingReminder.title
-              }}
-              initialReminderAt={
-                editingReminder.reminderAt
-              }
-              onSuccess={handleReminderUpdated}
-              onCancel={() =>
-                setEditingReminder(null)
-              }
-            />
-          </div>
-        </div>
+        <Modal
+          title="Update reminder"
+          onClose={() => setEditingReminder(null)}
+        >
+          <ReminderForm
+            key={editingReminder.noteId}
+            note={{
+              id: editingReminder.noteId,
+              title: editingReminder.title
+            }}
+            initialReminderAt={editingReminder.reminderAt}
+            onSuccess={handleReminderUpdated}
+            onCancel={() =>
+              setEditingReminder(null)
+            }
+          />
+        </Modal>
       )}
     </main>
   );
