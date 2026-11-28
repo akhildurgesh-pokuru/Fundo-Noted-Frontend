@@ -5,11 +5,11 @@ import { Link, useNavigate } from "react-router";
 import { getApiError } from "../utils/getApiError";
 import { removeToken } from "../utils/token";
 
-function OrganizedNotesPage({
-  title,
-  loadNotes,
-  actions
-}) {
+import LoadingState from "./ui/LoadingState";
+import EmptyState from "./ui/EmptyState";
+import StatusMessage from "./ui/StatusMessage";
+
+function OrganizedNotesPage({ title, loadNotes, actions }) {
   const navigate = useNavigate();
 
   const [notes, setNotes] = useState([]);
@@ -18,30 +18,42 @@ function OrganizedNotesPage({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const result = await loadNotes();
-      setNotes(result);
-    } catch (err) {
+  const handleError = useCallback(
+    (err, fallback) => {
       if (err.response?.status === 401) {
         removeToken();
         navigate("/login", { replace: true });
         return;
       }
 
-      setError(getApiError(err, "Unable to load notes."));
+      setError(getApiError(err, fallback));
+    },
+    [navigate]
+  );
+
+  // Load real archived or trashed notes from Spring Boot.
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await loadNotes();
+      setNotes(result);
+
+      return true;
+    } catch (err) {
+      handleError(err, "Unable to load notes.");
+      return false;
     } finally {
       setLoading(false);
     }
-  }, [loadNotes, navigate]);
+  }, [loadNotes, handleError]);
 
   useEffect(() => {
     load();
   }, [load]);
 
+  // Restore, unarchive, or permanently delete a note.
   async function handleAction(action, note) {
     if (
       action.confirm &&
@@ -58,55 +70,88 @@ function OrganizedNotesPage({
       setMessage("");
 
       await action.run(note.id);
-      await load();
 
-      setMessage(`${action.label} completed successfully.`);
-    } catch (err) {
-      if (err.response?.status === 401) {
-        removeToken();
-        navigate("/login", { replace: true });
-        return;
+      const loaded = await load();
+
+      if (loaded) {
+        setMessage(`${action.label} completed successfully.`);
       }
-
-      setError(getApiError(err, "Unable to complete action."));
+    } catch (err) {
+      handleError(err, "Unable to complete action.");
     } finally {
       setBusyId(null);
     }
   }
 
+  const emptyDescription =
+    title === "Trash"
+      ? "Notes moved to Trash will appear here."
+      : "Archived notes will appear here.";
+
   return (
     <main className="dashboard-page">
       <header className="dashboard-header">
         <h1>Fundoo Notes</h1>
-        <Link to="/dashboard">Back to Notes</Link>
+
+        <nav
+          className="dashboard-actions"
+          aria-label="Page navigation"
+        >
+          <Link to="/dashboard" className="profile-link">
+            Back to Notes
+          </Link>
+
+          <Link to="/archive" className="profile-link">
+            Archive
+          </Link>
+
+          <Link to="/trash" className="profile-link">
+            Trash
+          </Link>
+        </nav>
       </header>
 
       <section className="dashboard-content">
         <h2>{title}</h2>
 
+        {/* UC9 - Error feedback */}
         {error && (
-          <p className="error-message" role="alert">
+          <StatusMessage type="error">
             {error}
-          </p>
+          </StatusMessage>
         )}
 
+        {/* UC9 - Success feedback */}
         {message && (
-          <p className="success-message" role="status">
+          <StatusMessage type="success">
             {message}
-          </p>
+          </StatusMessage>
         )}
 
+        {/* UC9 - Loading / Empty / Notes */}
         {loading ? (
-          <p>Loading notes...</p>
+          <LoadingState
+            message={`Loading ${title.toLowerCase()}...`}
+          />
         ) : error ? (
-          <button onClick={load}>Retry</button>
+          <button type="button" onClick={load}>
+            Retry
+          </button>
         ) : notes.length === 0 ? (
-          <p>No notes found in {title.toLowerCase()}.</p>
+          <EmptyState
+            title={`No notes in ${title}`}
+            description={emptyDescription}
+          />
         ) : (
           <div className="notes-grid">
             {notes.map(note => (
-              <article className="note-card" key={note.id}>
-                <h3>{note.title || "Untitled Note"}</h3>
+              <article
+                className="note-card"
+                key={note.id}
+              >
+                <h3>
+                  {note.title || "Untitled Note"}
+                </h3>
 
                 <p className="note-content">
                   {note.content || "No content"}

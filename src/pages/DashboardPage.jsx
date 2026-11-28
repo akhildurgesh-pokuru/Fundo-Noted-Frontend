@@ -6,6 +6,13 @@ import NoteForm from "../components/NoteForm";
 import NoteCard from "../components/NoteCard";
 import ReminderForm from "../components/ReminderForm";
 
+// UC9 - Reusable UI components
+import LoadingState from "../components/ui/LoadingState";
+import EmptyState from "../components/ui/EmptyState";
+import StatusMessage from "../components/ui/StatusMessage";
+import Modal from "../components/ui/Modal";
+
+// UC3 and UC5 - Notes CRUD and Search
 import {
   getNotes,
   createNote,
@@ -13,6 +20,7 @@ import {
   searchNotes
 } from "../services/noteService";
 
+// UC4 - Notes Organization
 import {
   pinNote,
   unpinNote,
@@ -20,6 +28,7 @@ import {
   trashNote
 } from "../services/noteOrganizationService";
 
+// Authentication and Error Handling
 import { logoutUser } from "../services/authService";
 import { getApiError } from "../utils/getApiError";
 import { removeToken } from "../utils/token";
@@ -27,27 +36,44 @@ import { removeToken } from "../utils/token";
 function DashboardPage() {
   const navigate = useNavigate();
 
-  // Notes state
+  // -----------------------------
+  // Notes State
+  // -----------------------------
+
   const [notes, setNotes] = useState([]);
+
   const [editingNote, setEditingNote] = useState(null);
   const [viewingNote, setViewingNote] = useState(null);
   const [reminderNote, setReminderNote] = useState(null);
 
-  // UC5: Search state
+  // -----------------------------
+  // UC5 - Search State
+  // -----------------------------
+
   const [searchKeyword, setSearchKeyword] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
 
-  // UI state
+  // -----------------------------
+  // UI State
+  // -----------------------------
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  // Handle API errors
+  // -----------------------------
+  // Handle API Errors
+  // -----------------------------
+
   const handleApiError = useCallback(
     (err, fallback) => {
       if (err.response?.status === 401) {
         removeToken();
-        navigate("/login", { replace: true });
+
+        navigate("/login", {
+          replace: true
+        });
+
         return;
       }
 
@@ -56,8 +82,10 @@ function DashboardPage() {
     [navigate]
   );
 
-  // Load real notes from Spring Boot.
-  // If a search is active, load matching notes.
+  // -----------------------------
+  // Load Notes From Spring Boot
+  // -----------------------------
+
   const loadNotes = useCallback(
     async (keyword = "") => {
       try {
@@ -74,7 +102,11 @@ function DashboardPage() {
 
         return true;
       } catch (err) {
-        handleApiError(err, "Unable to load notes.");
+        handleApiError(
+          err,
+          "Unable to load notes."
+        );
+
         return false;
       } finally {
         setLoading(false);
@@ -83,17 +115,20 @@ function DashboardPage() {
     [handleApiError]
   );
 
-  // Load notes when dashboard opens.
+  // Load notes when Dashboard opens.
   useEffect(() => {
     loadNotes();
   }, [loadNotes]);
 
-  // Refresh the currently displayed list after mutations.
+  // Reload current search results after changes.
   async function refreshNotes() {
     return loadNotes(activeSearch);
   }
 
-  // UC5: Search notes
+  // -----------------------------
+  // UC5 - Search Notes
+  // -----------------------------
+
   async function handleSearch(event) {
     event.preventDefault();
 
@@ -108,7 +143,6 @@ function DashboardPage() {
     }
   }
 
-  // UC5: Clear search
   async function handleClearSearch() {
     setSearchKeyword("");
     setActiveSearch("");
@@ -117,7 +151,79 @@ function DashboardPage() {
     await loadNotes();
   }
 
-  // UC4: Pin / Unpin
+  // -----------------------------
+  // UC3 - Create Note
+  // -----------------------------
+
+  async function handleCreate(form) {
+    try {
+      setError("");
+      setMessage("");
+
+      await createNote(form);
+
+      const loaded = await refreshNotes();
+
+      if (!loaded) {
+        throw new Error(
+          "Note was saved, but the list could not be refreshed."
+        );
+      }
+
+      setMessage("Note created successfully!");
+    } catch (err) {
+      handleApiError(
+        err,
+        "Unable to create note."
+      );
+
+      throw err;
+    }
+  }
+
+  // -----------------------------
+  // UC3 - Update Note
+  // -----------------------------
+
+  async function handleUpdate(form) {
+    if (!editingNote) {
+      return;
+    }
+
+    try {
+      setError("");
+      setMessage("");
+
+      await updateNote(
+        editingNote.id,
+        form
+      );
+
+      const loaded = await refreshNotes();
+
+      if (!loaded) {
+        throw new Error(
+          "Note was updated, but the list could not be refreshed."
+        );
+      }
+
+      setEditingNote(null);
+
+      setMessage("Note updated successfully!");
+    } catch (err) {
+      handleApiError(
+        err,
+        "Unable to update note."
+      );
+
+      throw err;
+    }
+  }
+
+  // -----------------------------
+  // UC4 - Pin / Unpin Note
+  // -----------------------------
+
   async function handlePin(note) {
     try {
       setError("");
@@ -129,13 +235,27 @@ function DashboardPage() {
         await pinNote(note.id);
       }
 
-      await refreshNotes();
+      const loaded = await refreshNotes();
+
+      if (loaded) {
+        setMessage(
+          note.pinned
+            ? "Note unpinned successfully."
+            : "Note pinned successfully."
+        );
+      }
     } catch (err) {
-      handleApiError(err, "Unable to change pin status.");
+      handleApiError(
+        err,
+        "Unable to change pin status."
+      );
     }
   }
 
-  // UC4: Archive
+  // -----------------------------
+  // UC4 - Archive Note
+  // -----------------------------
+
   async function handleArchive(note) {
     try {
       setError("");
@@ -149,17 +269,25 @@ function DashboardPage() {
         setMessage("Note archived successfully.");
       }
     } catch (err) {
-      handleApiError(err, "Unable to archive note.");
+      handleApiError(
+        err,
+        "Unable to archive note."
+      );
     }
   }
 
-  // UC4: Move to Trash
+  // -----------------------------
+  // UC4 - Move Note to Trash
+  // -----------------------------
+
   async function handleTrash(note) {
     const confirmed = window.confirm(
       `Move "${note.title || "Untitled Note"}" to Trash?`
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     try {
       setError("");
@@ -173,121 +301,119 @@ function DashboardPage() {
         setMessage("Note moved to Trash.");
       }
     } catch (err) {
-      handleApiError(err, "Unable to move note to Trash.");
+      handleApiError(
+        err,
+        "Unable to move note to Trash."
+      );
     }
   }
 
-  // UC3: Create Note
-  async function handleCreate(form) {
-    try {
-      setError("");
-      setMessage("");
+  // -----------------------------
+  // UC1 - Logout
+  // -----------------------------
 
-      await createNote(form);
-
-      const loaded = await refreshNotes();
-
-      if (!loaded) {
-        throw new Error(
-          "Note was saved, but the notes list could not be refreshed."
-        );
-      }
-
-      setMessage("Note created successfully!");
-    } catch (err) {
-      handleApiError(err, "Unable to create note.");
-      throw err;
-    }
-  }
-
-  // UC3: Update Note
-  async function handleUpdate(form) {
-    if (!editingNote) return;
-
-    try {
-      setError("");
-      setMessage("");
-
-      await updateNote(editingNote.id, form);
-
-      const loaded = await refreshNotes();
-
-      if (!loaded) {
-        throw new Error(
-          "Note was updated, but the notes list could not be refreshed."
-        );
-      }
-
-      setEditingNote(null);
-      setMessage("Note updated successfully!");
-    } catch (err) {
-      handleApiError(err, "Unable to update note.");
-      throw err;
-    }
-  }
-
-  // Logout
   function handleLogout() {
     logoutUser();
-    navigate("/login", { replace: true });
+
+    navigate("/login", {
+      replace: true
+    });
   }
 
-  // Show only active notes, with pinned notes first.
+  // -----------------------------
+  // Display Active Notes
+  // Pinned Notes First
+  // -----------------------------
+
   const visibleNotes = [...notes]
-    .filter(note => !note.archived && !note.trashed)
+    .filter(
+      note => !note.archived && !note.trashed
+    )
     .sort(
-      (a, b) => Number(b.pinned) - Number(a.pinned)
+      (a, b) =>
+        Number(b.pinned) - Number(a.pinned)
     );
+
+  // -----------------------------
+  // Dashboard UI
+  // -----------------------------
 
   return (
     <main className="dashboard-page">
 
-      {/* Navigation */}
+      {/* Header and Navigation */}
       <header className="dashboard-header">
         <h1>Fundoo Notes</h1>
 
-        <div className="dashboard-actions">
-          <Link to="/profile" className="profile-link">
+        <nav
+          className="dashboard-actions"
+          aria-label="Main navigation"
+        >
+          <Link
+            to="/profile"
+            className="profile-link"
+          >
             My Profile
           </Link>
 
-          <Link to="/labels" className="profile-link">
+          <Link
+            to="/labels"
+            className="profile-link"
+          >
             Manage Labels
           </Link>
 
-          <Link to="/archive" className="profile-link">
+          <Link
+            to="/archive"
+            className="profile-link"
+          >
             Archive
           </Link>
 
-          <Link to="/trash" className="profile-link">
+          <Link
+            to="/trash"
+            className="profile-link"
+          >
             Trash
           </Link>
 
-          <Link to="/reminders" className="profile-link">
+          <Link
+            to="/reminders"
+            className="profile-link"
+          >
             Reminders
           </Link>
 
-          <Link to="/csv" className="profile-link">
+          <Link
+            to="/csv"
+            className="profile-link"
+          >
             Import / Export
           </Link>
 
-          <button type="button" onClick={handleLogout}>
+          <button
+            type="button"
+            onClick={handleLogout}
+          >
             Logout
           </button>
-        </div>
+        </nav>
       </header>
 
       <section className="dashboard-content">
+
         <h2>My Notes</h2>
 
-        {/* UC5: Search Notes */}
+        {/* UC5 - Search Notes */}
         <form
           className="notes-search-form"
           onSubmit={handleSearch}
+          role="search"
         >
           <input
             type="search"
             placeholder="Search notes by title or description..."
+            aria-label="Search notes"
             value={searchKeyword}
             onChange={event =>
               setSearchKeyword(event.target.value)
@@ -310,153 +436,155 @@ function DashboardPage() {
           </button>
         </form>
 
-        {/* Current search indicator */}
+        {/* Display Active Search */}
         {activeSearch && (
-          <p>
-            Showing results for: <strong>{activeSearch}</strong>
+          <p className="search-results-label">
+            Showing results for:{" "}
+            <strong>{activeSearch}</strong>
           </p>
         )}
 
-        {/* UC3: Create Note */}
+        {/* UC3 - Create Note */}
         <NoteForm onSave={handleCreate} />
 
-        {/* Error */}
+        {/* UC9 - Error Message */}
         {error && (
-          <p className="error-message" role="alert">
+          <StatusMessage type="error">
             {error}
-          </p>
+          </StatusMessage>
         )}
 
-        {/* Success */}
+        {/* UC9 - Success Message */}
         {message && (
-          <p className="success-message" role="status">
+          <StatusMessage type="success">
             {message}
-          </p>
+          </StatusMessage>
         )}
 
-        {/* Notes list */}
+        {/* UC9 - Loading, Empty and Notes States */}
         {loading ? (
-          <p>Loading notes...</p>
+          <LoadingState
+            message="Loading your notes..."
+          />
         ) : error ? (
           <button
             type="button"
-            onClick={() => loadNotes(activeSearch)}
+            onClick={() =>
+              loadNotes(activeSearch)
+            }
           >
             Retry Loading Notes
           </button>
         ) : visibleNotes.length === 0 ? (
-          <div className="empty-notes">
-            {activeSearch ? (
-              <>
-                <h3>No matching notes found</h3>
-                <p>
-                  No active notes match "{activeSearch}".
-                </p>
-              </>
-            ) : (
-              <>
-                <h3>No notes yet</h3>
-                <p>Create your first note above.</p>
-              </>
-            )}
-          </div>
+          <EmptyState
+            title={
+              activeSearch
+                ? "No matching notes"
+                : "No notes yet"
+            }
+            description={
+              activeSearch
+                ? `No active notes match "${activeSearch}".`
+                : "Create your first note using the form above."
+            }
+          />
         ) : (
           <div className="notes-grid">
             {visibleNotes.map(note => (
               <NoteCard
-              key={note.id}
-              note={note}
-              onView={setViewingNote}
-              onEdit={setEditingNote}
-              onPin={handlePin}
-              onArchive={handleArchive}
-              onTrash={handleTrash}
-              onReminder={setReminderNote}
-            />
+                key={note.id}
+                note={note}
+                onView={setViewingNote}
+                onEdit={setEditingNote}
+                onPin={handlePin}
+                onArchive={handleArchive}
+                onTrash={handleTrash}
+                onReminder={setReminderNote}
+              />
             ))}
           </div>
         )}
+
       </section>
 
-      {/* UC3: View Full Note */}
+      {/* UC3 + UC9 - Accessible View Note Dialog */}
       {viewingNote && (
-        <div className="note-modal-backdrop">
-          <div
-            className="note-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="View note"
-          >
-            <h2>
-              {viewingNote.title || "Untitled Note"}
-            </h2>
+        <Modal
+          title="View note"
+          onClose={() => setViewingNote(null)}
+        >
+          <h2>
+            {viewingNote.title || "Untitled Note"}
+          </h2>
 
-            <p className="note-content">
-              {viewingNote.content || "No content"}
-            </p>
+          <p className="note-content">
+            {viewingNote.content || "No content"}
+          </p>
 
-            <div className="note-form-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingNote(viewingNote);
-                  setViewingNote(null);
-                }}
-              >
-                Edit
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setViewingNote(null)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* UC3: Edit Note */}
-      {editingNote && (
-        <div className="note-modal-backdrop">
-          <div
-            className="note-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Edit note"
-          >
-            <h2>Edit Note</h2>
-
-            <NoteForm
-              key={editingNote.id}
-              initialNote={editingNote}
-              onSave={handleUpdate}
-              onCancel={() => setEditingNote(null)}
-            />
-          </div>
-        </div>
-      )}
-
-      {reminderNote && (
-        <div className="note-modal-backdrop">
-          <div
-            className="note-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Set note reminder"
-          >
-            <ReminderForm
-              note={reminderNote}
-              onSuccess={() => {
-                setReminderNote(null);
-                setMessage("Reminder saved successfully!");
+          <div className="note-form-actions">
+            <button
+              type="button"
+              onClick={() => {
+                setEditingNote(viewingNote);
+                setViewingNote(null);
               }}
-              onCancel={() => setReminderNote(null)}
-            />
+            >
+              Edit
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setViewingNote(null)
+              }
+            >
+              Close
+            </button>
           </div>
-        </div>
+        </Modal>
       )}
+
+      {/* UC3 + UC9 - Accessible Edit Note Dialog */}
+      {editingNote && (
+        <Modal
+          title="Edit note"
+          onClose={() => setEditingNote(null)}
+        >
+          <h2>Edit Note</h2>
+
+          <NoteForm
+            key={editingNote.id}
+            initialNote={editingNote}
+            onSave={handleUpdate}
+            onCancel={() =>
+              setEditingNote(null)
+            }
+          />
+        </Modal>
+      )}
+
+      {/* UC6 + UC9 - Reminder Dialog */}
+      {reminderNote && (
+        <Modal
+          title="Set note reminder"
+          onClose={() => setReminderNote(null)}
+        >
+          <ReminderForm
+            note={reminderNote}
+            onSuccess={() => {
+              setReminderNote(null);
+
+              setMessage(
+                "Reminder saved successfully!"
+              );
+            }}
+            onCancel={() =>
+              setReminderNote(null)
+            }
+          />
+        </Modal>
+      )}
+
     </main>
   );
 }

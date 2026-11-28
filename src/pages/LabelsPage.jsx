@@ -14,27 +14,27 @@ import {
   removeLabelFromNote
 } from "../services/labelService";
 
+import LoadingState from "../components/ui/LoadingState";
+import EmptyState from "../components/ui/EmptyState";
+import StatusMessage from "../components/ui/StatusMessage";
+
 import { getApiError } from "../utils/getApiError";
 import { removeToken } from "../utils/token";
 
 function LabelsPage() {
   const navigate = useNavigate();
 
-  // Labels from Spring Boot
   const [labels, setLabels] = useState([]);
   const [selectedLabelId, setSelectedLabelId] = useState(null);
 
-  // Notes from Spring Boot
   const [allNotes, setAllNotes] = useState([]);
   const [labelNotes, setLabelNotes] = useState([]);
 
-  // Form values
   const [newLabelName, setNewLabelName] = useState("");
   const [editingLabelId, setEditingLabelId] = useState(null);
   const [editingName, setEditingName] = useState("");
   const [selectedNoteId, setSelectedNoteId] = useState("");
 
-  // UI state
   const [loading, setLoading] = useState(true);
   const [notesLoading, setNotesLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -54,7 +54,7 @@ function LabelsPage() {
     [navigate]
   );
 
-  // Load labels and available active notes.
+  // Load real labels and active notes from Spring Boot.
   const loadInitialData = useCallback(async () => {
     try {
       setLoading(true);
@@ -78,12 +78,12 @@ function LabelsPage() {
     loadInitialData();
   }, [loadInitialData]);
 
-  // Load the actual notes belonging to one label.
+  // Load notes assigned to the selected label.
   const loadLabelNotes = useCallback(
-    async (labelId) => {
+    async labelId => {
       if (labelId == null) {
         setLabelNotes([]);
-        return;
+        return false;
       }
 
       try {
@@ -92,8 +92,15 @@ function LabelsPage() {
 
         const notes = await getNotesByLabel(labelId);
         setLabelNotes(notes);
+
+        return true;
       } catch (err) {
-        handleError(err, "Unable to load notes for this label.");
+        handleError(
+          err,
+          "Unable to load notes for this label."
+        );
+
+        return false;
       } finally {
         setNotesLoading(false);
       }
@@ -127,11 +134,11 @@ function LabelsPage() {
 
       const created = await createLabel(name);
 
-      const refreshed = await getLabels();
-      setLabels(refreshed);
-
+      setLabels(await getLabels());
       setNewLabelName("");
       setSelectedLabelId(created.id);
+      setSelectedNoteId("");
+
       setMessage("Label created successfully.");
     } catch (err) {
       handleError(err, "Unable to create label.");
@@ -140,7 +147,7 @@ function LabelsPage() {
     }
   }
 
-  // Start editing a label
+  // Start renaming a label.
   function startRename(label) {
     setEditingLabelId(label.id);
     setEditingName(label.name);
@@ -148,7 +155,7 @@ function LabelsPage() {
     setMessage("");
   }
 
-  // Save updated label name
+  // Rename Label
   async function handleRenameLabel(event) {
     event.preventDefault();
 
@@ -178,7 +185,7 @@ function LabelsPage() {
     }
   }
 
-  // Delete Label
+  // Delete Label (notes are preserved).
   async function handleDeleteLabel(label) {
     const confirmed = window.confirm(
       `Delete the label "${label.name}"?\n\n` +
@@ -193,7 +200,6 @@ function LabelsPage() {
       setMessage("");
 
       await deleteLabel(label.id);
-
       setLabels(await getLabels());
 
       if (selectedLabelId === label.id) {
@@ -204,6 +210,7 @@ function LabelsPage() {
 
       if (editingLabelId === label.id) {
         setEditingLabelId(null);
+        setEditingName("");
       }
 
       setMessage("Label deleted. Its notes are preserved.");
@@ -214,7 +221,7 @@ function LabelsPage() {
     }
   }
 
-  // Assign selected label to a note
+  // Assign the selected label to an active note.
   async function handleAssignLabel(event) {
     event.preventDefault();
 
@@ -233,10 +240,12 @@ function LabelsPage() {
         selectedLabelId
       );
 
-      await loadLabelNotes(selectedLabelId);
+      const loaded = await loadLabelNotes(selectedLabelId);
 
-      setSelectedNoteId("");
-      setMessage("Label assigned to note.");
+      if (loaded) {
+        setSelectedNoteId("");
+        setMessage("Label assigned to note.");
+      }
     } catch (err) {
       handleError(err, "Unable to assign label.");
     } finally {
@@ -244,7 +253,7 @@ function LabelsPage() {
     }
   }
 
-  // Remove selected label from a note
+  // Remove the selected label from a note.
   async function handleRemoveLabel(note) {
     if (selectedLabelId == null) return;
 
@@ -258,9 +267,11 @@ function LabelsPage() {
         selectedLabelId
       );
 
-      await loadLabelNotes(selectedLabelId);
+      const loaded = await loadLabelNotes(selectedLabelId);
 
-      setMessage("Label removed from note.");
+      if (loaded) {
+        setMessage("Label removed from note.");
+      }
     } catch (err) {
       handleError(err, "Unable to remove label.");
     } finally {
@@ -272,7 +283,6 @@ function LabelsPage() {
     label => label.id === selectedLabelId
   );
 
-  // Do not offer notes already assigned to the label.
   const assignedNoteIds = new Set(
     labelNotes.map(note => note.id)
   );
@@ -289,7 +299,10 @@ function LabelsPage() {
       <header className="dashboard-header">
         <h1>Fundoo Notes</h1>
 
-        <div className="dashboard-actions">
+        <nav
+          className="dashboard-actions"
+          aria-label="Page navigation"
+        >
           <Link to="/dashboard" className="profile-link">
             My Notes
           </Link>
@@ -301,7 +314,7 @@ function LabelsPage() {
           <Link to="/trash" className="profile-link">
             Trash
           </Link>
-        </div>
+        </nav>
       </header>
 
       <section className="dashboard-content">
@@ -311,16 +324,18 @@ function LabelsPage() {
           Create labels and organize your existing notes.
         </p>
 
+        {/* UC9 - Error feedback */}
         {error && (
-          <p className="error-message" role="alert">
+          <StatusMessage type="error">
             {error}
-          </p>
+          </StatusMessage>
         )}
 
+        {/* UC9 - Success feedback */}
         {message && (
-          <p className="success-message" role="status">
+          <StatusMessage type="success">
             {message}
-          </p>
+          </StatusMessage>
         )}
 
         {/* Create Label */}
@@ -344,12 +359,13 @@ function LabelsPage() {
             type="submit"
             disabled={busy || !newLabelName.trim()}
           >
-            Add Label
+            {busy ? "Processing..." : "Add Label"}
           </button>
         </form>
 
+        {/* UC9 - Loading state */}
         {loading ? (
-          <p>Loading labels...</p>
+          <LoadingState message="Loading your labels..." />
         ) : (
           <div className="label-layout">
 
@@ -358,7 +374,10 @@ function LabelsPage() {
               <h3>Your Labels</h3>
 
               {labels.length === 0 ? (
-                <p>No labels yet. Create your first label.</p>
+                <EmptyState
+                  title="No labels yet"
+                  description="Create a label to organize your notes."
+                />
               ) : (
                 <div className="labels-list">
                   {labels.map(label => (
@@ -378,21 +397,26 @@ function LabelsPage() {
                             onChange={event =>
                               setEditingName(event.target.value)
                             }
+                            disabled={busy}
                             aria-label="Rename label"
                           />
 
                           <button
                             type="submit"
-                            disabled={busy}
+                            disabled={
+                              busy ||
+                              !editingName.trim()
+                            }
                           >
                             Save
                           </button>
 
                           <button
                             type="button"
-                            onClick={() =>
-                              setEditingLabelId(null)
-                            }
+                            onClick={() => {
+                              setEditingLabelId(null);
+                              setEditingName("");
+                            }}
                             disabled={busy}
                           >
                             Cancel
@@ -411,7 +435,9 @@ function LabelsPage() {
                               setSelectedLabelId(label.id);
                               setSelectedNoteId("");
                               setMessage("");
+                              setError("");
                             }}
+                            disabled={busy}
                           >
                             {label.name}
                           </button>
@@ -444,14 +470,16 @@ function LabelsPage() {
               )}
             </section>
 
-            {/* Notes belonging to a label */}
+            {/* Notes for selected label */}
             <section className="labels-panel">
               {!selectedLabel ? (
                 <>
                   <h3>Label Notes</h3>
-                  <p>
-                    Select a label to view or assign notes.
-                  </p>
+
+                  <EmptyState
+                    title="No label selected"
+                    description="Select a label to view or assign notes."
+                  />
                 </>
               ) : (
                 <>
@@ -459,7 +487,7 @@ function LabelsPage() {
                     Notes with label: {selectedLabel.name}
                   </h3>
 
-                  {/* Assign a note */}
+                  {/* Assign Label */}
                   <form
                     className="label-assign-form"
                     onSubmit={handleAssignLabel}
@@ -482,7 +510,9 @@ function LabelsPage() {
                           value={note.id}
                         >
                           {note.title || "Untitled Note"}
-                          {" (ID: "}{note.id}{")"}
+                          {" (ID: "}
+                          {note.id}
+                          {")"}
                         </option>
                       ))}
                     </select>
@@ -499,12 +529,25 @@ function LabelsPage() {
                     </button>
                   </form>
 
+                  {/* UC9 - Label notes state */}
                   {notesLoading ? (
-                    <p>Loading assigned notes...</p>
+                    <LoadingState
+                      message="Loading assigned notes..."
+                    />
+                  ) : error ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        loadLabelNotes(selectedLabelId)
+                      }
+                    >
+                      Retry Loading Label Notes
+                    </button>
                   ) : labelNotes.length === 0 ? (
-                    <p>
-                      No active notes assigned to this label.
-                    </p>
+                    <EmptyState
+                      title="No assigned notes"
+                      description="Assign an active note to this label."
+                    />
                   ) : (
                     <div className="label-notes-grid">
                       {labelNotes.map(note => (
