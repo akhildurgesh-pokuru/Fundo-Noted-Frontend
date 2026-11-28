@@ -16,6 +16,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ArchivePage from "./pages/ArchivePage";
 import TrashPage from "./pages/TrashPage";
 import LabelsPage from "./pages/LabelsPage";
+import RemindersPage from "./pages/RemindersPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -80,6 +81,10 @@ function App() {
         
         <Route path="/labels" 
         element={<LabelsPage />} 
+        />
+
+        <Route path="/reminders" 
+        element={<RemindersPage />} 
         />
         
       </Routes>
